@@ -1,7 +1,10 @@
 {
   "name": "todo-list-supabase",
-  "private": true,
   "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "author": "Douglas Ochner<https://github.com/dochner>",
   "scripts": {
     "build": "nuxi build",
     "dev:pwa": "VITE_PLUGIN_PWA=true nuxi dev",
@@ -19,7 +22,6 @@
     "nuxt": "^3.12.4",
     "vue": "latest"
   },
-  "packageManager": "pnpm@9.4.0+sha1.9217c800d4ab947a7aee520242a7b70d64fc7638",
   "devDependencies": {
     "@antfu/eslint-config": "^2.24.1",
     "@iconify-json/mdi": "^1.1.68",
