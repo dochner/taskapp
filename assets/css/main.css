@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --header-height: 4.5rem;
+}
+
+@layer components {
+    .overlay {
+        @apply bg-[radial-gradient(50%_50%_at_50%_50%,_rgb(var(--color-primary-400)_/_.1)_0,_rgb(var(--color-gray-950)))];
+    }
+}

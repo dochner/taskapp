@@ -1,8 +1,7 @@
 <template>
-  <AppContainer>
-    <AppHeader />
-    <PageContainer>
-      <NuxtPage />
-    </PageContainer>
-  </AppContainer>
+  <VitePwaManifest />
+
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>

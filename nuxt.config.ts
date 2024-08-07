@@ -1,14 +1,13 @@
-import { appDescription } from "./constants";
-import { pwa } from "./configs/pwa";
-
+import { appDescription } from './constants'
+import { pwa } from './configs/pwa'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
   modules: [
-    "@nuxtjs/supabase",
-    "@nuxt/ui",
+    '@nuxtjs/supabase',
+    '@nuxt/ui',
     '@vueuse/nuxt',
     '@vite-pwa/nuxt',
     '@nuxt/eslint',
@@ -31,8 +30,11 @@ export default defineNuxtConfig({
     },
   },
 
+  css: ['~/assets/css/main.css'],
+
   runtimeConfig: {
     public: {
+      // eslint-disable-next-line node/prefer-global/process
       baseUrl: process.env.BASE_URL || 'http://localhost:3000',
     },
   },
