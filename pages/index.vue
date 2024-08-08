@@ -25,14 +25,23 @@ const state = reactive({
   password: undefined,
 })
 
+async function signInWithGoogle() {
+  const { error } = await auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
+}
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Do something with event.data
   console.log(event.data)
 }
 
-watchEffect(() => {
+const loading = ref(true)
+
+onBeforeMount(() => {
   if (user.value) {
     navigateTo('/todos')
+  }
+  else {
+    loading.value = false
   }
 })
 </script>
@@ -41,7 +50,10 @@ watchEffect(() => {
   <div class="h-screen flex items-center justify-center overlay w-full">
     <div class="gradient" />
 
-    <div class="rounded-xl divide-y divide-gray-200 dark:divide-gray-800 ring-1 ring-gray-200 dark:ring-gray-800 shadow max-w-sm w-full bg-white/75 dark:bg-white/5 backdrop-blur">
+    <div
+      v-if="!loading"
+      class="rounded-xl divide-y divide-gray-200 dark:divide-gray-800 ring-1 ring-gray-200 dark:ring-gray-800 shadow max-w-sm w-full bg-white/75 dark:bg-white/5 backdrop-blur"
+    >
       <div class="px-4 py-5 sm:p-6">
         <div class="w-full max-w-sm space-y-6">
           <div class="text-center">
@@ -72,6 +84,7 @@ watchEffect(() => {
                 icon="i-mdi-google"
                 :ui="{ rounded: 'rounded-full' }"
                 variant="soft"
+                @click="signInWithGoogle"
               >
                 Sign in with Google
               </UButton>
@@ -110,6 +123,12 @@ watchEffect(() => {
           </div>
         </div>
       </div>
+    </div>
+
+    <div v-else>
+      <p class="u-text-black">
+        Loading...
+      </p>
     </div>
   </div>
 </template>

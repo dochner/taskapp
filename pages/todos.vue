@@ -16,7 +16,8 @@ const { data: todos } = await useAsyncData('todos', async () => {
 })
 
 async function addTodo() {
-  if (newTodo.value.trim().length === 0) return
+  if (newTodo.value.trim().length === 0)
+    return
 
   loading.value = true
 
@@ -35,18 +36,18 @@ async function addTodo() {
   loading.value = false
 }
 
-const completeTodo = async (todo: Partial<Todo>) => {
+async function completeTodo(todo: Partial<Todo>) {
   await client.from('todos').update({ is_complete: todo.is_complete }).match({ id: todo.id })
 }
 
-const removeTodo = async (todo: Partial<Todo>) => {
+async function removeTodo(todo: Partial<Todo>) {
   if (todos.value?.length === 1)
     todos.value = todos.value.filter(t => t.id !== todo.id)
 
   await client.from('todos').delete().match({ id: todo.id })
 }
 
-const fetchtodosFromServerRoute = async () => {
+async function fetchtodosFromServerRoute() {
   const { data } = await useFetch('/api/todos', { headers: useRequestHeaders(['cookie']), key: 'todos-from-server' })
 
   todosFromServer.value = data
@@ -65,19 +66,19 @@ const fetchtodosFromServerRoute = async () => {
     >
       <UInput
         v-model="newTodo"
-        :loading="loading"
+        autocomplete="off"
+        autofocus
         class="w-full"
-        size="xl"
         color="white"
-        type="text"
+        :loading="loading"
         name="newTodo"
         placeholder="Make a coffee"
-        autofocus
-        autocomplete="off"
+        size="xl"
+        type="text"
       />
       <UButton
-        type="submit"
         color="white"
+        type="submit"
       >
         Add
       </UButton>
@@ -94,26 +95,26 @@ const fetchtodosFromServerRoute = async () => {
         >
           <div class="py-2">
             <UFormGroup
-              :label-class="`block font-medium ${todo.is_complete ? 'line-through u-text-gray-500' : 'u-text-gray-700'}`"
               :label="todo.task ?? undefined"
+              :label-class="`block font-medium ${todo.is_complete ? 'line-through u-text-gray-500' : 'u-text-gray-700'}`"
               :name="String(todo.id)"
               wrapper-class="flex items-center justify-between w-full"
             >
               <div class="flex items-center justify-between">
-                <div @click="completeTodo(todo)">
+                <div @click="completeTodo(todo as Todo)">
                   <UToggle
-                    :model-value="todo.is_complete ?? undefined"
-                    :name="String(todo.id)"
                     icon-off="heroicons-solid:x"
                     icon-on="heroicons-solid:check"
+                    :model-value="todo.is_complete ?? undefined"
+                    :name="String(todo.id)"
                     @update:model-value="(event) => todo.is_complete = event"
                   />
                 </div>
                 <UButton
                   class="ml-3 text-red-600"
-                  size="sm"
                   icon="i-heroicons-outline-trash"
-                  @click="removeTodo(todo)"
+                  size="sm"
+                  @click="removeTodo(todo as Todo)"
                 />
               </div>
             </UFormGroup>
@@ -121,24 +122,26 @@ const fetchtodosFromServerRoute = async () => {
         </li>
       </ul>
     </UCard>
+
     <UButton
       class="mt-6"
       label="Fetch todos from Nuxt server route"
       @click="fetchtodosFromServerRoute"
     />
+
     <UModal v-model="isModalOpen">
       <h2 class="mb-4">
         todos fetched from
         <a
+          class="text-primary-500 underline"
           href="https://nuxt.com/docs/guide/directory-structure/server"
           target="_blank"
-          class="text-primary-500 underline"
         >Nuxt Server route</a>
         with the use of the
         <a
+          class="text-primary-500 underline"
           href="https://supabase.nuxtjs.org/usage/services/server-supabase-client"
           target="_blank"
-          class="text-primary-500 underline"
         >serverSupabaseClient</a>:
       </h2>
       <pre>
