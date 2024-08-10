@@ -32,8 +32,7 @@ async function signInWithGoogle() {
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Do something with event.data
-  // eslint-disable-next-line no-console
-  console.log(event.data)
+  console.warn('asdasd', event.data)
 }
 
 const loading = ref(true)
@@ -101,11 +100,7 @@ onBeforeMount(() => {
               :state="state"
               @submit="onSubmit"
             >
-              <UFormGroup>
-                <ULabel class="text-xs font-medium">
-                  Email
-                </ULabel>
-
+              <UFormGroup label="E-mail">
                 <UInput
                   v-model="state.email"
                   placeholder="Enter your e-mail"

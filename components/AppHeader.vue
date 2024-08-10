@@ -74,7 +74,7 @@ async function logout() {
           @click="toggleMenu"
         />
 
-        <Placeholder class="mt-12 flex-1 w-full h-full max-h-[calc(100%-3rem)]" />
+        <div class="mt-12 flex-1 w-full h-full max-h-[calc(100%-3rem)] border" />
       </div>
     </USlideover>
   </header>

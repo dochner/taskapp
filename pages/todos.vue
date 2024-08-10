@@ -1,153 +1,88 @@
 <script setup lang="ts">
+import type { Task } from '~/types/tasks'
 import type { Database } from '~~/types/database.types'
 
 const client = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 
-const todosFromServer = ref()
+const taskLists = ref<
+  Database['public']['Tables']['task_lists']['Row'][]
+>([])
+
+// Fetch task lists on mount (consider using useAsyncData for better loading state handling)
+onMounted(async () => {
+  if (user.value) {
+    const { data, error } = await client
+      .from('task_lists')
+      .select('*')
+      .or(`owner_id.eq.${user.value.id},id.in.(select list_id from task_list_shares where user_id.eq.${user.value.id})`)
+
+    if (error) {
+      console.error('Error fetching task lists:', error)
+      // Handle error
+    }
+    else {
+      taskLists.value = data as Database['public']['Tables']['task_lists']['Row'][]
+    }
+  }
+})
+
+const tasksFromServer = ref()
 const isModalOpen = ref(false)
 const loading = ref(false)
-const newTodo = ref('')
+const newTask = ref('')
 
-const { data: todos } = await useAsyncData('todos', async () => {
-  const { data } = await client.from('todos').select('id, task, is_complete').eq('user_id', user.value.id).order('inserted_at')
+const { data: tasks } = await useAsyncData('tasks', async () => {
+  const { data } = await client.from('tasks').select('id, name, is_completed').order('created_at')
 
   return data
 })
 
-async function addTodo() {
-  if (newTodo.value.trim().length === 0)
-    return
-
-  loading.value = true
-
-  const { data } = await client.from('todos')
-    .upsert({
-      user_id: user.value.id,
-      task: newTodo.value,
-      is_complete: false,
-    })
-    .select('id, task, is_complete')
-    .single()
-
-  // Fix this any later please
-  todos.value?.push(data as any)
-  newTodo.value = ''
-  loading.value = false
+async function addTask() {
+  console.warn('add task!')
 }
 
-async function completeTodo(todo: Partial<Todo>) {
-  await client.from('todos').update({ is_complete: todo.is_complete }).match({ id: todo.id })
+async function completeTask(task: Partial<Task>) {
+  await client.from('tasks').update({ is_completed: task.is_completed }).match({ id: task.id })
 }
 
-async function removeTodo(todo: Partial<Todo>) {
-  if (todos.value?.length === 1)
-    todos.value = todos.value.filter(t => t.id !== todo.id)
+async function removeTask(task: Partial<Task>) {
+  if (tasks.value?.length === 1)
+    tasks.value = tasks.value.filter(t => t.id !== task.id)
 
-  await client.from('todos').delete().match({ id: todo.id })
+  await client.from('tasks').delete().match({ id: task.id })
 }
 
-async function fetchtodosFromServerRoute() {
-  const { data } = await useFetch('/api/todos', { headers: useRequestHeaders(['cookie']), key: 'todos-from-server' })
+async function fetchtasksFromServerRoute() {
+  const { data } = await useFetch('/api/tasks', { headers: useRequestHeaders(['cookie']), key: 'tasks-from-server' })
 
-  todosFromServer.value = data
+  tasksFromServer.value = data
   isModalOpen.value = true
 }
 </script>
 
 <template>
-  <div class="w-full my-[50px]">
-    <h1 class="mb-12 text-6xl font-bold u-text-white">
-      Todo List.
-    </h1>
-    <form
-      class="flex gap-2 my-2"
-      @submit.prevent="addTodo"
-    >
-      <UInput
-        v-model="newTodo"
-        autocomplete="off"
-        autofocus
-        class="w-full"
-        color="white"
-        :loading="loading"
-        name="newTodo"
-        placeholder="Make a coffee"
-        size="xl"
-        type="text"
+  <div>
+    <div class="w-full my-[50px]">
+      <h1 class="mb-12 text-6xl font-bold u-text-white">
+        Task Lists
+      </h1>
+    </div>
+
+    <div v-if="taskLists.length > 0">
+      <TaskList
+        v-for="list in taskLists"
+        :key="list.id"
+        :list="list"
       />
-      <UButton
-        color="white"
-        type="submit"
-      >
-        Add
-      </UButton>
-    </form>
-    <UCard
-      v-if="todos?.length && todos?.length > 0"
-      body-class="px-6 py-2 overflow-hidden"
+    </div>
+
+    <div
+      v-else
+      class="text-center text-gray-500"
     >
-      <ul>
-        <li
-          v-for="todo of todos"
-          :key="todo.id"
-          class="border-b border-gray-200 divide-y divide-gray-200"
-        >
-          <div class="py-2">
-            <UFormGroup
-              :label="todo.task ?? undefined"
-              :label-class="`block font-medium ${todo.is_complete ? 'line-through u-text-gray-500' : 'u-text-gray-700'}`"
-              :name="String(todo.id)"
-              wrapper-class="flex items-center justify-between w-full"
-            >
-              <div class="flex items-center justify-between">
-                <div @click="completeTodo(todo as Todo)">
-                  <UToggle
-                    icon-off="heroicons-solid:x"
-                    icon-on="heroicons-solid:check"
-                    :model-value="todo.is_complete ?? undefined"
-                    :name="String(todo.id)"
-                    @update:model-value="(event) => todo.is_complete = event"
-                  />
-                </div>
-                <UButton
-                  class="ml-3 text-red-600"
-                  icon="i-heroicons-outline-trash"
-                  size="sm"
-                  @click="removeTodo(todo as Todo)"
-                />
-              </div>
-            </UFormGroup>
-          </div>
-        </li>
-      </ul>
-    </UCard>
-
-    <UButton
-      class="mt-6"
-      label="Fetch todos from Nuxt server route"
-      @click="fetchtodosFromServerRoute"
-    />
-
-    <UModal v-model="isModalOpen">
-      <h2 class="mb-4">
-        todos fetched from
-        <a
-          class="text-primary-500 underline"
-          href="https://nuxt.com/docs/guide/directory-structure/server"
-          target="_blank"
-        >Nuxt Server route</a>
-        with the use of the
-        <a
-          class="text-primary-500 underline"
-          href="https://supabase.nuxtjs.org/usage/services/server-supabase-client"
-          target="_blank"
-        >serverSupabaseClient</a>:
-      </h2>
-      <pre>
-        {{ todosFromServer }}
-      </pre>
-    </UModal>
+      No task lists yet. Create one to get started!
+    </div>
   </div>
 </template>
 
